@@ -1,0 +1,124 @@
+Microsoft (R) Macro Assembler Version 6.11		    06/19/20 10:12:37
+tempfile.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+				    ;此处输入数据段代码  
+ 0000				DATAS ENDS
+
+ 0000				STACKS SEGMENT
+				    ;此处输入堆栈段代码
+ 0000				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+				    ;此处输入代码段代码
+				    
+				     ; 改中断例程入口地址
+ 0005  B8 0000			        mov ax,0
+ 0008  8E C0			        mov es,ax
+ 000A  26: FF 36 0024		        push es:[9*4]
+ 000F  8F 06 0000		        pop ds:[0]
+ 0013  26: FF 36 0026		        push es:[9*4+2]
+ 0018  8F 06 0002		        pop ds:[2]
+ 001C  26: C7 06 0024		        mov word ptr es:[9*4],offset int9
+       0000
+ 0023  26: 8C 0E 0026		        mov es:[9*4+2],cs
+
+				        ; 显示'a'~'z'
+ 0028  B8 B800			        mov ax,0b800h
+ 002B  8E C0			        mov es,ax
+ 002D  B4 61			        mov ah,'a'
+ 002F  26: 88 26 07D0		   s:   mov  es:[160*12+40*2],ah
+ 0034  E8 0023			        call delay
+ 0037  FE C4			        inc ah
+ 0039  80 FC 7A			        cmp ah,'z'
+ 003C  76 F1			        jna s
+ 003E  B8 0000			        mov ax,0
+ 0041  8E C0			        mov es,ax
+
+				        ; 恢复原来的地址
+ 0043  FF 36 0000		        push ds:[0]
+ 0047  26: 8F 06 0024		        pop es:[9*4]
+ 004C  FF 36 0002		        push ds:[2]
+ 0050  26: 8F 06 0026		        pop es:[9*4+2]
+
+ 0055  B8 4C00			        mov ax,4c00h
+ 0058  CD 21			        int 21h
+
+				        ; 定义延迟程序
+ 005A  50			delay:  push ax
+ 005B  52			        push dx
+ 005C  BA 0010			        mov dx,10h
+ 005F  B8 0000			        mov ax,0
+ 0062  83 E8 01			   s1:  sub ax,1
+ 0065  83 DA 00			        sbb dx,0
+ 0068  83 F8 00			        cmp ax,0
+ 006B  75 F5			        jne s1
+ 006D  83 FA 00			        cmp dx,0
+ 0070  75 F0			        jne s1
+ 0072  5A			        pop dx
+ 0073  58			        pop ax
+ 0074  C3			        ret
+
+				        ; 定义中断例程
+ 0075  50			int9:   push ax
+ 0076  53			        push bx
+ 0077  06			        push es
+ 0078  E4 60			        in al,60h
+ 007A  9C			        pushf
+ 007B  9C			        pushf
+ 007C  5B			        pop bx
+ 007D  80 E7 FC			        and bh,11111100b
+ 0080  53			        push bx
+ 0081  9D			        popf
+ 0082  FF 1E 0000		        call dword ptr ds:[0]
+
+ 0086  3C 01			        cmp al,1 ; ESC扫描码1
+ 0088  75 0A			        jne int9ret
+				        ;改变颜色
+ 008A  B8 B800			        mov ax,0b800h
+ 008D  8E C0			        mov es,ax
+ 008F  26: FE 06 07D1		        inc byte ptr es:[160*12+40*2+1]
+ 0094  07			int9ret:pop es
+ 0095  5B			        pop bx
+ 0096  58			        pop ax
+ 0097  CF			        iret
+				        
+				        
+ 0098  B4 4C			    MOV AH,4CH
+ 009A  CD 21			    INT 21H
+ 009C				CODES ENDS
+				    END START
+
+Microsoft (R) Macro Assembler Version 6.11		    06/19/20 10:12:37
+tempfile.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 009C	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+delay  . . . . . . . . . . . . .	L Near	 005A	  CODES	
+int9ret  . . . . . . . . . . . .	L Near	 0094	  CODES	
+int9 . . . . . . . . . . . . . .	L Near	 0075	  CODES	
+s1 . . . . . . . . . . . . . . .	L Near	 0062	  CODES	
+s  . . . . . . . . . . . . . . .	L Near	 002F	  CODES	
+
+	   0 Warnings
+	   0 Errors
